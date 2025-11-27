@@ -402,6 +402,7 @@ class Terminal {
             'termux': () => this.enterTermuxMode(),
             'container': () => this.handleContainer(args),
             'setup': () => this.setupAI(),
+            'health': () => this.healthCheck(),
             'history': () => this.history.join('\n'),
             'whoami': () => 'You are talking to KIRO - Your AI Terminal Assistant',
             'about': () => this.aboutKiro(),
@@ -536,6 +537,39 @@ Example:
         };
 
         return actions[subcommand] ? actions[subcommand]() : `Unknown container command: ${subcommand}\nType "container" for help`;
+    }
+
+    healthCheck() {
+        const report = window.errorHandler ? window.errorHandler.getErrorReport() : null;
+        const apiKey = localStorage.getItem('ai_api_key');
+        
+        return `
+╔════════════════════════════════════════════════════════════╗
+║                    SYSTEM HEALTH CHECK                     ║
+╠════════════════════════════════════════════════════════════╣
+║  Status: ${report?.status === 'healthy' ? '✅ HEALTHY' : '⚠️ NEEDS ATTENTION'}                                    ║
+║                                                            ║
+║  Components:                                               ║
+║  • Terminal: ${this.output ? '✅ Running' : '❌ Error'}                                  ║
+║  • AI Bridge: ${this.ai ? '✅ Active' : '❌ Inactive'}                                 ║
+║  • Termux Emulator: ${this.termux ? '✅ Ready' : '❌ Not loaded'}                          ║
+║  • Container System: ${this.containers ? '✅ Ready' : '❌ Not loaded'}                         ║
+║  • Error Handler: ${window.errorHandler ? '✅ Active' : '❌ Inactive'}                           ║
+║                                                            ║
+║  AI Configuration:                                         ║
+║  • API Key: ${apiKey ? '✅ Configured' : '⚪ Not set (Hybrid mode)'}                            ║
+║  • Mode: ${apiKey ? 'Enhanced' : 'Hybrid Intelligence'}                                  ║
+║                                                            ║
+║  Error Log:                                                ║
+║  • Total Errors: ${report?.totalErrors || 0}                                      ║
+║  • Auto-fix Attempts: ${report?.autoFixAttempts || 0}/${report ? '3' : '?'}                              ║
+║                                                            ║
+║  Session:                                                  ║
+║  • Commands Executed: ${this.history.length}                                ║
+║  • Uptime: ${Math.floor(performance.now() / 1000 / 60)} minutes                              ║
+╚════════════════════════════════════════════════════════════╝
+
+💡 All systems operational! Type "help" for available commands.`;
     }
 
     getSystemInfo() {
