@@ -3,29 +3,70 @@ class ContainerSystem {
     constructor() {
         this.containers = new Map();
         this.activeContainer = null;
+        this.backendUrl = 'http://localhost:5000';
+        this.backendAvailable = false;
+        this.checkBackend();
+    }
+
+    async checkBackend() {
+        try {
+            const response = await fetch(`${this.backendUrl}/api/health`);
+            if (response.ok) {
+                this.backendAvailable = true;
+                console.log('✅ Flask backend connected!');
+            }
+        } catch (e) {
+            this.backendAvailable = false;
+            console.log('⚠️  Flask backend not available - using browser mode');
+        }
     }
 
     // Create a new container (Debian, Ubuntu, etc.)
-    createContainer(name, distro = 'debian') {
+    async createContainer(name, distro = 'debian') {
         if (this.containers.has(name)) {
             return `Container '${name}' already exists`;
         }
 
+        // Try Flask backend first (real Docker containers!)
+        if (this.backendAvailable) {
+            try {
+                const response = await fetch(`${this.backendUrl}/api/container/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, distro, gui: 'xfce' })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    this.containers.set(name, data.container);
+                    return `✅ Real Docker container created!\n\nContainer: ${name}\nDistro: ${distro} with XFCE desktop\nVNC URL: ${data.container.url}\n\nUse 'container start ${name}' to open the desktop!`;
+                } else {
+                    return `❌ Backend error: ${data.message}\n\nFalling back to browser mode...`;
+                }
+            } catch (e) {
+                console.error('Backend error:', e);
+                this.backendAvailable = false;
+            }
+        }
+
+        // Fallback: Browser-based simulation
         const container = {
             name: name,
             distro: distro,
             status: 'stopped',
             created: new Date(),
             iframe: null,
-            url: null
+            url: null,
+            mode: 'browser'
         };
 
         this.containers.set(name, container);
-        return `Container '${name}' created with ${distro}\nUse 'container start ${name}' to launch`;
+        return `Container '${name}' created with ${distro} (browser mode)\nUse 'container start ${name}' to launch\n\n💡 Tip: Start Flask backend for real Docker containers with GUI!`;
     }
 
     // Start a container in a new window/iframe
-    startContainer(name) {
+    async startContainer(name) {
         const container = this.containers.get(name);
         if (!container) {
             return `Container '${name}' not found`;
@@ -35,13 +76,45 @@ class ContainerSystem {
             return `Container '${name}' is already running`;
         }
 
-        // Create container window
+        // Real Docker container with GUI!
+        if (container.url && this.backendAvailable) {
+            try {
+                const response = await fetch(`${this.backendUrl}/api/container/start/${name}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Open Debian XFCE desktop in new window!
+                    const desktopWindow = window.open(
+                        data.url,
+                        name,
+                        'width=1920,height=1080,menubar=no,toolbar=no,location=no'
+                    );
+
+                    if (desktopWindow) {
+                        container.status = 'running';
+                        container.window = desktopWindow;
+                        this.activeContainer = name;
+                        
+                        return `🚀 Debian XFCE Desktop launched!\n\n✅ Opening in new window...\nURL: ${data.url}\nPassword: kiro2024\n\nYou now have a full Linux desktop with GUI! 🐧`;
+                    } else {
+                        return `⚠️  Popup blocked! Allow popups and try again.\n\nOr manually open: ${data.url}`;
+                    }
+                }
+            } catch (e) {
+                console.error('Start error:', e);
+            }
+        }
+
+        // Fallback: Browser simulation
         const containerWindow = this.createContainerWindow(container);
         container.iframe = containerWindow;
         container.status = 'running';
         this.activeContainer = name;
 
-        return `Container '${name}' started!\nAccess it in the new window or tab.`;
+        return `Container '${name}' started (browser mode)!\nAccess it in the new window or tab.\n\n💡 For real Debian XFCE desktop, start Flask backend!`;
     }
 
     createContainerWindow(container) {
