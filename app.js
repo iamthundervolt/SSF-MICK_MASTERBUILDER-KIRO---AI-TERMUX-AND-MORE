@@ -312,6 +312,7 @@ class Terminal {
         this.conversationHistory = [];
         this.ai = new UnifiedAIBridge();
         this.termux = new TermuxEmulator();
+        this.containers = new ContainerSystem();
         this.init();
     }
 
@@ -323,15 +324,19 @@ class Terminal {
             }
         });
         this.writeLine('╔════════════════════════════════════════════════════════════╗');
-        this.writeLine('║  KIRO UNIFIED AI - Ultimate Termux Expert v3.0           ║');
+        this.writeLine('║  KIRO UNIFIED AI - Always-On Intelligence v3.5           ║');
         this.writeLine('╚════════════════════════════════════════════════════════════╝');
         this.writeLine('');
-        this.writeLine('🚀 Powered by Unified AI Bridge - The Soul of Intelligence', '#00ffff');
-        this.writeLine('💻 Full Termux Emulator with Virtual File System', '#00ffff');
+        this.writeLine('🧠 AI ALWAYS LISTENING - Ask me anything, anytime!', '#00ffff');
+        this.writeLine('💻 Full Termux Emulator - 50+ commands ready', '#00ffff');
+        this.writeLine('🚀 Hybrid Intelligence - Works with or without API', '#00ffff');
         this.writeLine('');
-        this.writeLine('Type "termux" to enter Termux mode (ls, cd, mkdir, etc.)', '#ffff00');
-        this.writeLine('Type "chat" to talk with the ultimate Termux expert', '#ffff00');
-        this.writeLine('Type "help" for available commands', '#ffff00');
+        this.writeLine('💡 NEW: Just ask questions naturally!', '#ffff00');
+        this.writeLine('   "how do I install python?"', '#808080');
+        this.writeLine('   "what is my IP address?"', '#808080');
+        this.writeLine('   "help me set up SSH"', '#808080');
+        this.writeLine('');
+        this.writeLine('Or use commands: termux, help, system, config', '#ffff00');
     }
 
     writeLine(text, color = '#00ff00') {
@@ -356,22 +361,11 @@ class Terminal {
         this.writeLine(`${prompt}${cmd}`, '#ffffff');
         this.history.push(cmd);
 
-        // Chat mode handling
-        if (this.chatMode) {
-            if (cmd.toLowerCase() === 'exit' || cmd.toLowerCase() === 'quit') {
-                this.chatMode = false;
-                this.writeLine('Exiting chat mode...', '#ffff00');
-                return;
-            }
-            await this.chatWithAI(cmd);
-            return;
-        }
-
-        // Termux mode handling
+        // Termux mode handling (priority mode)
         if (this.termuxMode) {
             if (cmd.toLowerCase() === 'exit' || cmd.toLowerCase() === 'quit') {
                 this.termuxMode = false;
-                this.writeLine('Exiting Termux mode...', '#ffff00');
+                this.writeLine('Exiting Termux mode... AI listening again!', '#ffff00');
                 return;
             }
             const parts = cmd.split(' ');
@@ -384,6 +378,12 @@ class Terminal {
                 return;
             }
             if (result) this.writeLine(result);
+            return;
+        }
+
+        // Check if it's a question or natural language (AI should handle)
+        if (this.isQuestion(cmd)) {
+            await this.chatWithAI(cmd);
             return;
         }
 
@@ -400,6 +400,7 @@ class Terminal {
             'echo': () => args.join(' '),
             'chat': () => this.enterChatMode(),
             'termux': () => this.enterTermuxMode(),
+            'container': () => this.handleContainer(args),
             'setup': () => this.setupAI(),
             'history': () => this.history.join('\n'),
             'whoami': () => 'You are talking to KIRO - Your AI Terminal Assistant',
@@ -407,11 +408,41 @@ class Terminal {
             'config': () => this.showConfig()
         };
 
-        const result = commands[command] 
-            ? await commands[command]() 
-            : await this.tryAICommand(cmd);
+        // Try command first
+        if (commands[command]) {
+            const result = await commands[command]();
+            if (result) this.writeLine(result);
+        } else {
+            // Not a recognized command - ask AI
+            await this.chatWithAI(cmd);
+        }
+    }
+
+    isQuestion(cmd) {
+        const questionWords = ['how', 'what', 'why', 'when', 'where', 'who', 'can', 'could', 'would', 'should', 'is', 'are', 'do', 'does', 'help me', 'tell me', 'show me', 'explain'];
+        const lowerCmd = cmd.toLowerCase();
         
-        if (result) this.writeLine(result);
+        // Check if starts with question word
+        if (questionWords.some(word => lowerCmd.startsWith(word))) {
+            return true;
+        }
+        
+        // Check if ends with question mark
+        if (cmd.trim().endsWith('?')) {
+            return true;
+        }
+        
+        // Check if contains question words
+        if (questionWords.some(word => lowerCmd.includes(' ' + word + ' '))) {
+            return true;
+        }
+        
+        // Check if it's a longer sentence (likely conversational)
+        if (cmd.split(' ').length > 4 && !cmd.includes('/') && !cmd.includes('-')) {
+            return true;
+        }
+        
+        return false;
     }
 
     showHelp() {
@@ -419,23 +450,30 @@ class Terminal {
 ╔════════════════════════════════════════════════════════════╗
 ║                    AVAILABLE COMMANDS                      ║
 ╠════════════════════════════════════════════════════════════╣
-║  help      - Show this help menu                          ║
-║  chat      - Enter AI chat mode (talk with KIRO)          ║
-║  termux    - Enter Termux emulation mode                  ║
-║  setup     - Configure AI API settings                    ║
-║  clear     - Clear terminal screen                        ║
-║  date      - Show current date/time                       ║
-║  system    - Display system information                   ║
-║  history   - Show command history                         ║
-║  whoami    - Display current user info                    ║
-║  about     - Learn about KIRO                             ║
-║  config    - Show current configuration                   ║
-║  echo      - Echo text back                               ║
+║  💡 AI ALWAYS LISTENING - Just ask questions naturally!   ║
+║     "how do I install python?"                            ║
+║     "what is my IP address?"                              ║
 ║                                                            ║
-║  TERMUX MODE: Full Linux command emulation                ║
-║  ls, cd, pwd, mkdir, cat, rm, cp, mv, touch, grep        ║
-║  pkg, apt, git, ssh, curl, wget, ping, netstat           ║
-║  python, node, vim, nano, and 50+ more commands!         ║
+║  termux     - Enter Termux mode (50+ Linux commands)      ║
+║  container  - Manage virtual Linux containers             ║
+║  setup      - Configure AI API settings                   ║
+║  system     - Display system information                  ║
+║  config     - Show current configuration                  ║
+║  about      - Learn about KIRO                            ║
+║  clear      - Clear terminal screen                       ║
+║  history    - Show command history                        ║
+║                                                            ║
+║  🚀 REVOLUTIONARY FEATURES:                               ║
+║  • Always-on AI assistance                                ║
+║  • 50+ Termux commands (ls, cd, pkg, git, etc.)          ║
+║  • Virtual Linux containers (Debian, Ubuntu, Alpine)      ║
+║  • Natural language understanding                         ║
+║                                                            ║
+║  Examples:                                                ║
+║  $ how do I set up SSH?                                   ║
+║  $ termux                                                 ║
+║  $ container create mydebian debian                       ║
+║  $ container start mydebian                               ║
 ╚════════════════════════════════════════════════════════════╝`;
         return help;
     }
@@ -461,6 +499,43 @@ class Terminal {
         this.writeLine('Type "exit" to return to KIRO mode', '#808080');
         this.writeLine('', '#00ff00');
         return '';
+    }
+
+    handleContainer(args) {
+        const subcommand = args[0];
+        const name = args[1];
+        const distro = args[2] || 'debian';
+
+        if (!subcommand) {
+            return `Container Management System
+
+Usage:
+  container create <name> [debian|ubuntu|alpine]  - Create new container
+  container start <name>                          - Start container
+  container stop <name>                           - Stop container
+  container list                                  - List all containers
+  container info <name>                           - Show container info
+  container remove <name>                         - Remove container
+
+Example:
+  container create mydebian debian
+  container start mydebian
+
+🚀 REVOLUTIONARY: Run full Linux distros in browser windows!`;
+        }
+
+        const actions = {
+            'create': () => this.containers.createContainer(name, distro),
+            'start': () => this.containers.startContainer(name),
+            'stop': () => this.containers.stopContainer(name),
+            'list': () => this.containers.listContainers(),
+            'ls': () => this.containers.listContainers(),
+            'info': () => this.containers.getContainerInfo(name),
+            'remove': () => this.containers.removeContainer(name),
+            'rm': () => this.containers.removeContainer(name)
+        };
+
+        return actions[subcommand] ? actions[subcommand]() : `Unknown container command: ${subcommand}\nType "container" for help`;
     }
 
     getSystemInfo() {
@@ -501,18 +576,17 @@ Cores: ${navigator.hardwareConcurrency || 'N/A'}`;
     }
 
     enterChatMode() {
-        this.chatMode = true;
         this.writeLine('', '#00ff00');
-        this.writeLine('╔════════════════════════════════════════════════════════════╗', '#00ffff');
-        this.writeLine('║        UNIFIED AI CHAT MODE - THE SOUL AWAKENS            ║', '#00ffff');
-        this.writeLine('╚════════════════════════════════════════════════════════════╝', '#00ffff');
+        this.writeLine('💡 TIP: AI is ALWAYS listening!', '#00ffff');
         this.writeLine('', '#00ff00');
-        this.writeLine('🧠 Unified AI Bridge Active', '#00ff00');
-        this.writeLine('💎 Deep Termux Knowledge Loaded', '#00ff00');
-        this.writeLine('🌐 Multi-Source Intelligence Ready', '#00ff00');
+        this.writeLine('You don\'t need to enter "chat mode" anymore.', '#ffff00');
+        this.writeLine('Just ask your question naturally:', '#ffff00');
         this.writeLine('', '#00ff00');
-        this.writeLine('I am the ultimate Termux expert. Ask me anything!', '#ffff00');
-        this.writeLine('Type "exit" to return to terminal mode.', '#808080');
+        this.writeLine('  "how do I install nodejs?"', '#808080');
+        this.writeLine('  "what is the best way to set up SSH?"', '#808080');
+        this.writeLine('  "explain git commands"', '#808080');
+        this.writeLine('', '#00ff00');
+        this.writeLine('I\'ll automatically detect questions and help you!', '#00ffff');
         this.writeLine('', '#00ff00');
         return '';
     }
@@ -595,9 +669,7 @@ Cores: ${navigator.hardwareConcurrency || 'N/A'}`;
         }
     }
 
-    async tryAICommand(cmd) {
-        return `Command not found: ${cmd}\n\n💡 Tip: Type "chat" to ask me anything!\nI'm the ultimate Termux expert with deep knowledge of:\n• 20+ packages (Python, Node.js, Git, SSH, etc.)\n• Termux APIs (battery, camera, location, etc.)\n• Programming & scripting\n• Server setup & configuration`;
-    }
+
 }
 
 // Blockchain Scanner
