@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>HTML MASTERBUILDER</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="main">Main</button>
+            <button class="tab-btn" data-tab="terminal">Live Terminal</button>
+            <button class="tab-btn" data-tab="blockchain">Blockchain Scanner</button>
+            <button class="tab-btn" data-tab="telemetry">Telemetry</button>
+            <button class="tab-btn" data-tab="game">Pterodactyl</button>
+            <button class="tab-btn" data-tab="music">Music</button>
+            <button class="tab-btn" data-tab="news">News</button>
+        </nav>
+
+        <!-- Tab Content Containers -->
+        <div class="content-wrapper">
+            <!-- Main Tab -->
+            <div class="tab-content active" id="main">
+                <h2>System Overview</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">CPU Usage</span>
+                        <span class="metric-value" id="cpu-usage">0%</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Memory</span>
+                        <span class="metric-value" id="memory-usage">0%</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Active Tasks</span>
+                        <span class="metric-value" id="active-tasks">0</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Network</span>
+                        <span class="metric-value" id="network-status">Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Tab -->
+            <div class="tab-content" id="terminal">
+                <h2>Live Terminal</h2>
+                <div class="terminal-container">
+                    <div class="terminal-output" id="terminal-output"></div>
+                    <div class="terminal-input-wrapper">
+                        <span class="terminal-prompt">$</span>
+                        <input type="text" class="terminal-input" id="terminal-input" placeholder="Enter command...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blockchain Scanner Tab -->
+            <div class="tab-content" id="blockchain">
+                <h2>Blockchain Scanner</h2>
+                <div class="blockchain-container">
+                    <div class="scanner-controls">
+                        <button class="action-btn" id="start-scan">Start Scan</button>
+                        <button class="action-btn" id="stop-scan">Stop Scan</button>
+                    </div>
+                    <div class="scanner-output" id="blockchain-output"></div>
+                </div>
+            </div>
+
+            <!-- Telemetry Tab -->
+            <div class="tab-content" id="telemetry">
+                <h2>Telemetry</h2>
+                <div class="telemetry-grid">
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Temperature</span>
+                        <span class="telemetry-value" id="temp-value">--°C</span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Altitude</span>
+                        <span class="telemetry-value" id="altitude-value">-- m</span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Air Pressure</span>
+                        <span class="telemetry-value" id="pressure-value">-- hPa</span>
+                    </div>
+                </div>
+                <div class="map-container" id="map"></div>
+            </div>
+
+            <!-- Game Tab -->
+            <div class="tab-content" id="game">
+                <h2>Pterodactyl Flight</h2>
+                <canvas id="game-canvas"></canvas>
+                <div class="game-controls">
+                    <button class="action-btn" id="start-game">Start Game</button>
+                    <span class="score">Score: <span id="game-score">0</span></span>
+                </div>
+            </div>
+
+            <!-- Music Tab -->
+            <div class="tab-content" id="music">
+                <h2>Music Studio</h2>
+                <div class="music-container">
+                    <div class="instrument-section">
+                        <h3>Drum Machine</h3>
+                        <div class="sequencer" id="drum-sequencer"></div>
+                    </div>
+                    <div class="instrument-section">
+                        <h3>Synthesizer</h3>
+                        <div class="sequencer" id="synth-sequencer"></div>
+                    </div>
+                    <div class="instrument-section">
+                        <h3>Bassline</h3>
+                        <div class="sequencer" id="bass-sequencer"></div>
+                    </div>
+                    <div class="music-controls">
+                        <button class="action-btn" id="play-music">Play</button>
+                        <button class="action-btn" id="stop-music">Stop</button>
+                        <button class="action-btn" id="record-music">Record</button>
+                        <button class="action-btn" id="export-music">Export</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div class="tab-content" id="news">
+                <h2>Teletext News</h2>
+                <div class="news-container">
+                    <div class="news-controls">
+                        <input type="number" class="page-input" id="page-number" placeholder="Page" min="100" max="999">
+                        <button class="action-btn" id="load-page">Load Page</button>
+                    </div>
+                    <div class="teletext-display" id="teletext-display"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        if (!sessionStorage.getItem('kiro_authenticated')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
