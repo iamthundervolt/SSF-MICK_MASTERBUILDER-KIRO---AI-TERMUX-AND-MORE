@@ -439,7 +439,7 @@ class Terminal {
             const parts = cmd.split(' ');
             const command = parts[0];
             const args = parts.slice(1);
-            const result = this.termux.executeCommand(command, args);
+            const result = await this.termux.executeCommand(command, args);
             
             if (result === 'CLEAR') {
                 this.output.innerHTML = '';
@@ -493,6 +493,13 @@ class Terminal {
     }
 
     isQuestion(cmd) {
+        // Don't treat simple commands as questions
+        const simpleCommands = ['ls', 'cd', 'pwd', 'mkdir', 'touch', 'cat', 'rm', 'cp', 'mv', 'ps', 'top', 'free', 'df'];
+        const firstWord = cmd.trim().split(' ')[0].toLowerCase();
+        if (simpleCommands.includes(firstWord)) {
+            return false;
+        }
+
         const questionWords = ['how', 'what', 'why', 'when', 'where', 'who', 'can', 'could', 'would', 'should', 'is', 'are', 'do', 'does', 'help me', 'tell me', 'show me', 'explain'];
         const lowerCmd = cmd.toLowerCase();
         

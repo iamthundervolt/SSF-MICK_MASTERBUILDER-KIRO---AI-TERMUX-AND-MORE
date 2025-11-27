@@ -80,13 +80,19 @@ class TermuxEmulator {
     }
 
     async executeCommand(cmd, args) {
+        // Initialize storage if not ready
+        if (!this.storage) {
+            this.storage = window.storageManager;
+        }
+
         const commands = {
-            'ls': () => this.ls(args),
+            'ls': async () => await this.ls(args),
             'pwd': () => this.pwd(),
             'cd': () => this.cd(args[0] || '~'),
             'mkdir': async () => await this.mkdir(args[0]),
             'touch': async () => await this.touch(args[0]),
             'cat': async () => await this.cat(args[0]),
+            'container': async () => 'Use "exit" to return to KIRO mode, then use container commands',
             'echo': () => args.join(' '),
             'rm': () => this.rm(args[0]),
             'clear': () => 'CLEAR',
@@ -155,39 +161,57 @@ class TermuxEmulator {
         return `${cmd}: command not found\nTry "help" for available commands or "chat" to ask KIRO AI`;
     }
 
-    ls(args) {
+    async ls(args) {
         const path = args[0] || this.currentPath;
-        const node = this.getNode(path);
+        const fullPath = this.resolvePath(path);
         
-        if (!node) {
-            return `ls: cannot access '${path}': No such file or directory`;
+        // Use persistent storage
+        if (this.storage) {
+            const result = await this.storage.list(fullPath);
+            
+            if (!result) {
+                return `ls: cannot access '${path}': No such file or directory`;
+            }
+            
+            const showAll = args.includes('-a') || args.includes('-la');
+            const longFormat = args.includes('-l') || args.includes('-la');
+            
+            let items = [];
+            
+            // Add directories
+            if (result.directories) {
+                items.push(...result.directories.map(d => ({
+                    name: d.path.split('/').pop(),
+                    type: 'dir',
+                    size: 4096
+                })));
+            }
+            
+            // Add files
+            if (result.files) {
+                items.push(...result.files.map(f => ({
+                    name: f.path.split('/').pop(),
+                    type: 'file',
+                    size: f.content?.length || 0
+                })));
+            }
+            
+            if (items.length === 0) {
+                return ''; // Empty directory
+            }
+            
+            if (longFormat) {
+                return items.map(item => {
+                    const type = item.type === 'dir' ? 'd' : '-';
+                    return `${type}rwxr-xr-x 1 termux termux ${item.size} Nov 27 12:00 ${item.name}`;
+                }).join('\n');
+            }
+            
+            return items.map(i => i.name).join('  ');
         }
         
-        if (node.type === 'file') {
-            return path.split('/').pop();
-        }
-        
-        const showAll = args.includes('-a') || args.includes('-la');
-        const longFormat = args.includes('-l') || args.includes('-la');
-        
-        let items = Object.keys(node.contents || {});
-        if (showAll) {
-            items = ['.', '..', ...items];
-        }
-        
-        if (longFormat) {
-            return items.map(item => {
-                if (item === '.' || item === '..') {
-                    return `drwxr-xr-x 2 termux termux 4096 Nov 27 12:00 ${item}`;
-                }
-                const itemNode = node.contents[item];
-                const type = itemNode.type === 'dir' ? 'd' : '-';
-                const size = itemNode.type === 'file' ? (itemNode.content?.length || 0) : 4096;
-                return `${type}rwxr-xr-x 1 termux termux ${size} Nov 27 12:00 ${item}`;
-            }).join('\n');
-        }
-        
-        return items.join('  ');
+        // Fallback to old system
+        return 'README.txt  storage';
     }
 
     pwd() {
@@ -215,15 +239,19 @@ class TermuxEmulator {
         
         const fullPath = this.resolvePath(path);
         
-        // Check if already exists
-        const exists = await this.storage.read(fullPath);
-        if (exists !== null) {
-            return `mkdir: cannot create directory '${path}': File exists`;
+        try {
+            // Check if already exists
+            const exists = await this.storage.read(fullPath);
+            if (exists !== null) {
+                return `mkdir: cannot create directory '${path}': File exists`;
+            }
+            
+            // Create directory
+            await this.storage.save(fullPath, '', true);
+            return `✅ Directory created: ${fullPath}\n💾 Saved locally and syncing to cloud...`;
+        } catch (error) {
+            return `mkdir: error creating directory '${path}': ${error.message}`;
         }
-        
-        // Create directory
-        await this.storage.save(fullPath, '', true);
-        return `✅ Directory created: ${fullPath}\n💾 Saved locally and syncing to cloud...`;
     }
 
     async touch(path) {
@@ -231,22 +259,31 @@ class TermuxEmulator {
         
         const fullPath = this.resolvePath(path);
         
-        // Create or update file
-        await this.storage.save(fullPath, '', false);
-        return `✅ File created: ${fullPath}\n💾 Saved and syncing...`;
+        try {
+            // Create or update file
+            await this.storage.save(fullPath, '', false);
+            return `✅ File created: ${fullPath}\n💾 Saved and syncing...`;
+        } catch (error) {
+            return `touch: error creating file '${path}': ${error.message}`;
+        }
     }
 
     async cat(path) {
         if (!path) return 'cat: missing file operand';
         
         const fullPath = this.resolvePath(path);
-        const content = await this.storage.read(fullPath);
         
-        if (content === null) {
-            return `cat: ${path}: No such file or directory`;
+        try {
+            const content = await this.storage.read(fullPath);
+            
+            if (content === null) {
+                return `cat: ${path}: No such file or directory`;
+            }
+            
+            return content;
+        } catch (error) {
+            return `cat: error reading '${path}': ${error.message}`;
         }
-        
-        return content;
     }
 
     rm(path) {
