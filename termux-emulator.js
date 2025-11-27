@@ -123,7 +123,7 @@ class TermuxEmulator {
             'file': () => `${args[0]}: text/plain`,
             'grep': () => this.grep(args),
             'find': () => this.find(args),
-            'tree': () => this.tree(),
+            'tree': async () => await this.tree(),
             'nano': () => `Opening ${args[0] || 'file'} in nano... (simulated)`,
             'vim': () => `Opening ${args[0] || 'file'} in vim... (simulated)`,
             'python': () => 'Python 3.11.0 (simulated)\nType "help", "copyright" for more information.',
@@ -423,8 +423,51 @@ tcp        0      0 192.168.1.100:45678     93.184.216.34:443       ESTABLISHED`
         return `./\n./README.txt\n./storage`;
     }
 
-    tree() {
-        return `.\n├── README.txt\n└── storage\n    ├── shared\n    ├── downloads\n    └── dcim`;
+    async tree() {
+        try {
+            const result = await this.storage.list(this.currentPath);
+            
+            if (!result) {
+                return '.';
+            }
+            
+            let output = '.';
+            const items = [];
+            
+            // Collect directories
+            if (result.directories) {
+                items.push(...result.directories.map(d => ({
+                    name: d.path.split('/').pop(),
+                    type: 'dir'
+                })));
+            }
+            
+            // Collect files
+            if (result.files) {
+                items.push(...result.files.map(f => ({
+                    name: f.path.split('/').pop(),
+                    type: 'file'
+                })));
+            }
+            
+            // Sort: directories first, then files
+            items.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            });
+            
+            // Build tree structure
+            items.forEach((item, index) => {
+                const isLast = index === items.length - 1;
+                const prefix = isLast ? '└── ' : '├── ';
+                const icon = item.type === 'dir' ? '📁 ' : '📄 ';
+                output += `\n${prefix}${icon}${item.name}`;
+            });
+            
+            return output || '.';
+        } catch (error) {
+            return `tree: error: ${error.message}`;
+        }
     }
 
     git(args) {
