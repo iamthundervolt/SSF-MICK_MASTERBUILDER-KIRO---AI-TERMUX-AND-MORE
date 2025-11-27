@@ -1,0 +1,90 @@
+# Quick GitHub Setup Guide
+
+## Step 1: Create GitHub Repository
+
+1. Go to https://github.com
+2. Click "New repository"
+3. Name it: "kiro-masterbuilder" (or any name you like)
+4. Make it Public (so GitHub Pages works for free)
+5. DON'T initialize with README (we already have files)
+6. Click "Create repository"
+
+## Step 2: Push Your Code
+
+Open PowerShell in the HTML_MASTERBUILDER folder and run:
+
+```powershell
+git remote add origin https://github.com/YOUR-USERNAME/kiro-masterbuilder.git
+git branch -M main
+git push -u origin main
+```
+
+Replace YOUR-USERNAME with your actual GitHub username.
+
+## Step 3: Enable GitHub Pages
+
+1. Go to your repository on GitHub
+2. Click "Settings"
+3. Scroll to "Pages" in the left sidebar
+4. Under "Source", select "main" branch
+5. Click "Save"
+6. Wait 1-2 minutes
+
+## Step 4: Access Your Live App
+
+Your app will be live at:
+https://YOUR-USERNAME.github.io/kiro-masterbuilder/login.html
+
+## Step 5: Add to iPad
+
+1. Open the URL on your iPad in Safari
+2. Login with: admin / kiro2024
+3. Tap Share button
+4. Select "Add to Home Screen"
+5. Name it "KIRO"
+6. Tap "Add"
+
+Now you have KIRO as an app icon on your iPad!
+
+## Alternative: Use This Direct Link
+
+If you don't want to set up GitHub, you can:
+
+1. Upload the HTML_MASTERBUILDER folder to any web hosting
+2. Or use Netlify (drag and drop the folder at netlify.com)
+3. Or keep it local and just open login.html in your browser
+
+## Your Repository Info
+
+Email: mickstewartldh@outlook.com
+Local Path: C:\Users\Gebruiker\Desktop\HTML_MASTERBUILDER\
+Backup: C:\Users\Gebruiker\Desktop\HTML_MASTERBUILDER_CHECKPOINT_v1.0\
+
+## Git Commands Reference
+
+```powershell
+# Check status
+git status
+
+# See commits
+git log --oneline
+
+# Make changes and commit
+git add .
+git commit -m "Your message here"
+git push
+
+# Create a new branch
+git checkout -b feature-name
+
+# Switch branches
+git checkout main
+```
+
+## Need Help?
+
+Type `chat` in the terminal and ask KIRO AI for help with Git commands!
+
+---
+
+Everything is ready to go live! 🚀
