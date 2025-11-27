@@ -14,25 +14,34 @@ class TermuxEmulator {
         this.networkInfo = null;
     }
 
-    initFileSystem() {
-        return {
-            '/': {
-                type: 'dir',
-                contents: {
-                    'home': {
-                        type: 'dir',
-                        contents: {
-                            'README.txt': { type: 'file', content: 'Welcome to KIRO Termux Emulator!\n\nThis is a virtual file system running in your browser.\nType "help" for available commands.' },
-                            'storage': { type: 'dir', contents: {} }
-                        }
-                    },
-                    'bin': { type: 'dir', contents: {} },
-                    'usr': { type: 'dir', contents: { 'bin': { type: 'dir', contents: {} } } },
-                    'tmp': { type: 'dir', contents: {} },
-                    'etc': { type: 'dir', contents: {} }
-                }
+    async initFileSystem() {
+        // Use persistent storage manager
+        this.storage = window.storageManager;
+        
+        // Initialize default directories if not exist
+        const defaultDirs = ['/home', '/home/storage', '/bin', '/usr', '/usr/bin', '/tmp', '/etc'];
+        for (const dir of defaultDirs) {
+            const exists = await this.storage.read(dir);
+            if (!exists) {
+                await this.storage.save(dir, '', true);
             }
-        };
+        }
+        
+        // Create README if not exists
+        const readme = await this.storage.read('/home/README.txt');
+        if (!readme) {
+            await this.storage.save('/home/README.txt', 
+                'Welcome to KIRO Termux Emulator!\n\n' +
+                'This file system is PERSISTENT!\n' +
+                '- Saved locally (IndexedDB)\n' +
+                '- Synced to GitHub (if configured)\n' +
+                '- Synced to backend (if running)\n\n' +
+                'Your files will survive page refreshes!\n\n' +
+                'Type "help" for available commands.'
+            );
+        }
+        
+        return {}; // Legacy support
     }
 
     resolvePath(path) {
@@ -70,14 +79,14 @@ class TermuxEmulator {
         return node;
     }
 
-    executeCommand(cmd, args) {
+    async executeCommand(cmd, args) {
         const commands = {
             'ls': () => this.ls(args),
             'pwd': () => this.pwd(),
             'cd': () => this.cd(args[0] || '~'),
-            'mkdir': () => this.mkdir(args[0]),
-            'touch': () => this.touch(args[0]),
-            'cat': () => this.cat(args[0]),
+            'mkdir': async () => await this.mkdir(args[0]),
+            'touch': async () => await this.touch(args[0]),
+            'cat': async () => await this.cat(args[0]),
             'echo': () => args.join(' '),
             'rm': () => this.rm(args[0]),
             'clear': () => 'CLEAR',
@@ -201,59 +210,43 @@ class TermuxEmulator {
         return '';
     }
 
-    mkdir(path) {
+    async mkdir(path) {
         if (!path) return 'mkdir: missing operand';
         
         const fullPath = this.resolvePath(path);
-        const parts = fullPath.split('/').filter(p => p);
-        const dirName = parts.pop();
-        const parentPath = '/' + parts.join('/');
         
-        const parent = this.getNode(parentPath);
-        if (!parent || parent.type !== 'dir') {
-            return `mkdir: cannot create directory '${path}': No such file or directory`;
-        }
-        
-        if (parent.contents[dirName]) {
+        // Check if already exists
+        const exists = await this.storage.read(fullPath);
+        if (exists !== null) {
             return `mkdir: cannot create directory '${path}': File exists`;
         }
         
-        parent.contents[dirName] = { type: 'dir', contents: {} };
-        return '';
+        // Create directory
+        await this.storage.save(fullPath, '', true);
+        return `✅ Directory created: ${fullPath}\n💾 Saved locally and syncing to cloud...`;
     }
 
-    touch(path) {
+    async touch(path) {
         if (!path) return 'touch: missing file operand';
         
         const fullPath = this.resolvePath(path);
-        const parts = fullPath.split('/').filter(p => p);
-        const fileName = parts.pop();
-        const parentPath = '/' + parts.join('/');
         
-        const parent = this.getNode(parentPath);
-        if (!parent || parent.type !== 'dir') {
-            return `touch: cannot touch '${path}': No such file or directory`;
-        }
-        
-        if (!parent.contents[fileName]) {
-            parent.contents[fileName] = { type: 'file', content: '' };
-        }
-        return '';
+        // Create or update file
+        await this.storage.save(fullPath, '', false);
+        return `✅ File created: ${fullPath}\n💾 Saved and syncing...`;
     }
 
-    cat(path) {
+    async cat(path) {
         if (!path) return 'cat: missing file operand';
         
-        const node = this.getNode(path);
-        if (!node) {
+        const fullPath = this.resolvePath(path);
+        const content = await this.storage.read(fullPath);
+        
+        if (content === null) {
             return `cat: ${path}: No such file or directory`;
         }
         
-        if (node.type !== 'file') {
-            return `cat: ${path}: Is a directory`;
-        }
-        
-        return node.content || '';
+        return content;
     }
 
     rm(path) {
