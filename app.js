@@ -775,23 +775,26 @@ Cores: ${navigator.hardwareConcurrency || 'N/A'}`;
 
 
     async chatWithAI(message) {
-        this.conversationHistory.push({ role: 'user', content: message });
-
         try {
             this.writeLine('🧠 KIRO is thinking...', '#808080');
             
-            const response = await this.ai.query(message, this.conversationHistory);
+            // Use the new SmartAI
+            const smartAI = window.smartAI || new SmartAI();
+            const response = await smartAI.chat(message);
             
+            // Remove "thinking" message
             this.output.removeChild(this.output.lastChild);
             
+            // Show response
             this.writeLine(`KIRO: ${response}`, '#00ffff');
-            this.conversationHistory.push({ role: 'assistant', content: response });
 
         } catch (error) {
-            this.output.removeChild(this.output.lastChild);
-            this.writeLine(`⚠ ${error.message}`, '#ff8800');
-            const response = this.ai.hybridIntelligence(message, message);
-            this.writeLine(`KIRO: ${response}`, '#00ffff');
+            // Remove "thinking" message if it exists
+            if (this.output.lastChild) {
+                this.output.removeChild(this.output.lastChild);
+            }
+            this.writeLine(`⚠ Oops, had a brain freeze! ${error.message}`, '#ff8800');
+            this.writeLine(`KIRO: But I'm still here! What did you want to know?`, '#00ffff');
         }
     }
 
@@ -1055,6 +1058,11 @@ class TeletextNews {
 
 // Initialize all systems
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Smart AI first
+    window.smartAI = new SmartAI();
+    console.log('🧠 Smart AI initialized!');
+    
+    // Initialize all other systems
     new TabManager();
     new SystemMonitor();
     new Terminal();
