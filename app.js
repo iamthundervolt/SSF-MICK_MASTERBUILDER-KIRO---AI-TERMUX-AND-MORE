@@ -323,20 +323,39 @@ class Terminal {
                 this.input.value = '';
             }
         });
+        
+        // Auto-initialize - no setup needed!
+        this.autoInitialize();
+        
         this.writeLine('╔════════════════════════════════════════════════════════════╗');
         this.writeLine('║  KIRO UNIFIED AI - Always-On Intelligence v3.5           ║');
         this.writeLine('╚════════════════════════════════════════════════════════════╝');
         this.writeLine('');
-        this.writeLine('🧠 AI ALWAYS LISTENING - Ask me anything, anytime!', '#00ffff');
-        this.writeLine('💻 Full Termux Emulator - 50+ commands ready', '#00ffff');
-        this.writeLine('🚀 Hybrid Intelligence - Works with or without API', '#00ffff');
+        this.writeLine('✅ System initialized and ready!', '#00ff00');
+        this.writeLine('🧠 AI Intelligence: Active (Hybrid Mode)', '#00ffff');
+        this.writeLine('💻 Termux Emulator: Ready (50+ commands)', '#00ffff');
+        this.writeLine('🐳 Container System: Ready (Debian/Ubuntu/Alpine)', '#00ffff');
         this.writeLine('');
-        this.writeLine('💡 NEW: Just ask questions naturally!', '#ffff00');
+        this.writeLine('💡 Just ask questions naturally!', '#ffff00');
         this.writeLine('   "how do I install python?"', '#808080');
         this.writeLine('   "what is my IP address?"', '#808080');
         this.writeLine('   "help me set up SSH"', '#808080');
         this.writeLine('');
-        this.writeLine('Or use commands: termux, help, system, config', '#ffff00');
+        this.writeLine('Commands: help, termux, container, health', '#ffff00');
+        this.writeLine('');
+    }
+
+    autoInitialize() {
+        // Silent auto-setup - no user action needed
+        if (!localStorage.getItem('kiro_initialized')) {
+            // Set up defaults
+            localStorage.setItem('kiro_initialized', 'true');
+            localStorage.setItem('kiro_version', '3.5');
+            localStorage.setItem('kiro_install_date', new Date().toISOString());
+            
+            // Hybrid mode is default - no API key needed!
+            console.log('✅ KIRO auto-initialized successfully');
+        }
     }
 
     writeLine(text, color = '#00ff00') {
@@ -628,35 +647,25 @@ Cores: ${navigator.hardwareConcurrency || 'N/A'}`;
     setupAI() {
         const apiKey = localStorage.getItem('ai_api_key');
         this.writeLine('', '#00ff00');
-        this.writeLine('═══════════════════ UNIFIED AI SETUP ═══════════════════', '#00ffff');
+        this.writeLine('═══════════════════ SYSTEM STATUS ═══════════════════', '#00ffff');
         this.writeLine('', '#00ff00');
-        this.writeLine('🧠 UNIFIED AI BRIDGE - The Soul of KIRO', '#00ffff');
+        this.writeLine('✅ KIRO is fully operational!', '#00ff00');
         this.writeLine('', '#00ff00');
-        this.writeLine('Current Status:', '#ffff00');
-        this.writeLine(`  Mode: ${apiKey ? 'Enhanced (API Connected)' : 'Hybrid Intelligence (Standalone)'}`, '#ffffff');
-        this.writeLine(`  API Key: ${apiKey ? '✓ Configured' : '✗ Not set'}`, '#ffffff');
-        this.writeLine('  Knowledge Base: ✓ Loaded (20+ packages, 10+ APIs)', '#00ff00');
-        this.writeLine('  Intelligence: ✓ Active', '#00ff00');
+        this.writeLine('Current Mode:', '#ffff00');
+        this.writeLine(`  ${apiKey ? '🚀 Enhanced Mode (External AI Connected)' : '🧠 Hybrid Intelligence Mode (Built-in AI)'}`, '#ffffff');
         this.writeLine('', '#00ff00');
-        this.writeLine('I work intelligently WITHOUT API keys using:', '#ffff00');
-        this.writeLine('  • Deep Termux knowledge base', '#ffffff');
-        this.writeLine('  • Hybrid intelligence system', '#ffffff');
-        this.writeLine('  • Context-aware responses', '#ffffff');
+        this.writeLine('Active Features:', '#ffff00');
+        this.writeLine('  ✓ Always-on AI assistance', '#00ff00');
+        this.writeLine('  ✓ Deep Termux knowledge (20+ packages)', '#00ff00');
+        this.writeLine('  ✓ 50+ Linux commands', '#00ff00');
+        this.writeLine('  ✓ Virtual containers (Debian/Ubuntu/Alpine)', '#00ff00');
+        this.writeLine('  ✓ Self-healing error handler', '#00ff00');
         this.writeLine('', '#00ff00');
-        this.writeLine('For ENHANCED intelligence, add an API key:', '#ffff00');
+        this.writeLine('💡 You\'re all set! No configuration needed.', '#ffff00');
+        this.writeLine('   Just start asking questions or using commands!', '#ffff00');
         this.writeLine('', '#00ff00');
-        this.writeLine('Free Options:', '#00ffff');
-        this.writeLine('  • Groq (fast & free)', '#ffffff');
-        this.writeLine('  • Hugging Face (free tier)', '#ffffff');
-        this.writeLine('', '#00ff00');
-        this.writeLine('Setup in browser console (F12):', '#ffff00');
-        this.writeLine('  localStorage.setItem("ai_api_key", "your-key")', '#00ff00');
-        this.writeLine('', '#00ff00');
-        this.writeLine('The Unified AI Bridge automatically:', '#ffff00');
-        this.writeLine('  ✓ Tries multiple AI sources', '#00ff00');
-        this.writeLine('  ✓ Enriches queries with Termux knowledge', '#00ff00');
-        this.writeLine('  ✓ Falls back to hybrid intelligence', '#00ff00');
-        this.writeLine('  ✓ Always provides expert answers', '#00ff00');
+        this.writeLine('Optional: Add external AI for enhanced responses', '#808080');
+        this.writeLine('  (Groq, HuggingFace, OpenAI - see docs)', '#808080');
         return '';
     }
 
