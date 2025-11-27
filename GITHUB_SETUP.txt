@@ -6,8 +6,7 @@
 2. Click "New repository"
 3. Name it: "kiro-masterbuilder" (or any name you like)
 4. Make it Public (so GitHub Pages works for free)
-5. DON'T initialize with README (we already have files)
-6. Click "Create repository"
+5. DON'T initialize with README (we alhttps://github.com/iamthundervolt/SSF-MICK_MASTERBUILDER-KIRO---AI-TERMUX-AND-MORE Click "Create repository"
 
 ## Step 2: Push Your Code
 
