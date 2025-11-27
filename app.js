@@ -313,6 +313,7 @@ class Terminal {
         this.ai = new UnifiedAIBridge();
         this.termux = new TermuxEmulator();
         this.containers = new ContainerSystem();
+        this.learningSystem = new LearningSystem();
         this.init();
     }
 
@@ -380,11 +381,59 @@ class Terminal {
         this.writeLine(`${prompt}${cmd}`, '#ffffff');
         this.history.push(cmd);
 
+        // LEARNING SYSTEM - Analyze command and detect intent
+        const learning = this.learningSystem.analyzeCommand(cmd, { termuxMode: this.termuxMode });
+        
+        // Check for intent interpretation (confused commands)
+        const intent = this.learningSystem.interpretIntent(cmd);
+        if (intent) {
+            if (intent.type === 'clarification') {
+                this.writeLine('', '#00ff00');
+                this.writeLine(intent.message, '#ffff00');
+                this.writeLine('', '#00ff00');
+                if (intent.guidance) {
+                    this.showGuidedSteps(intent.guidance);
+                }
+                return;
+            } else if (intent.steps) {
+                this.writeLine('', '#00ff00');
+                this.writeLine(`🎯 ${intent.explanation}`, '#00ffff');
+                this.writeLine('', '#00ff00');
+                this.showGuidedSteps(intent);
+                return;
+            }
+        }
+
+        // Check if learning system detected a mistake
+        if (learning && learning.type === 'correction') {
+            this.writeLine('', '#00ff00');
+            this.writeLine(learning.message, '#ffff00');
+            this.writeLine('', '#00ff00');
+            this.writeLine('Try this instead:', '#00ffff');
+            this.writeLine(`  ${learning.suggestedCommand}`, '#00ff00');
+            return;
+        }
+
+        // Check if user is struggling
+        if (learning && learning.type === 'guided_help') {
+            this.writeLine('', '#00ff00');
+            this.writeLine(learning.message, '#ffff00');
+            this.writeLine('', '#00ff00');
+            this.showGuidedSteps({ steps: learning.steps });
+            return;
+        }
+
         // Termux mode handling (priority mode)
         if (this.termuxMode) {
             if (cmd.toLowerCase() === 'exit' || cmd.toLowerCase() === 'quit') {
                 this.termuxMode = false;
                 this.writeLine('Exiting Termux mode... AI listening again!', '#ffff00');
+                
+                // Suggest next step
+                const suggestion = this.learningSystem.getPersonalizedSuggestion();
+                if (suggestion) {
+                    this.writeLine(suggestion, '#00ffff');
+                }
                 return;
             }
             const parts = cmd.split(' ');
@@ -397,6 +446,11 @@ class Terminal {
                 return;
             }
             if (result) this.writeLine(result);
+            
+            // Learn from success
+            if (result && !result.includes('not found') && !result.includes('error')) {
+                this.learningSystem.learnFromSuccess([cmd]);
+            }
             return;
         }
 
@@ -558,9 +612,25 @@ Example:
         return actions[subcommand] ? actions[subcommand]() : `Unknown container command: ${subcommand}\nType "container" for help`;
     }
 
+    showGuidedSteps(guidance) {
+        this.writeLine('📋 Step-by-step guide:', '#00ffff');
+        this.writeLine('', '#00ff00');
+        
+        guidance.steps.forEach((step, index) => {
+            this.writeLine(`${index + 1}. ${step.desc}`, '#ffff00');
+            if (step.cmd) {
+                this.writeLine(`   Command: ${step.cmd}`, '#00ff00');
+            }
+            this.writeLine('', '#00ff00');
+        });
+        
+        this.writeLine('💡 Just copy and paste the commands above!', '#00ffff');
+    }
+
     healthCheck() {
         const report = window.errorHandler ? window.errorHandler.getErrorReport() : null;
         const apiKey = localStorage.getItem('ai_api_key');
+        const learningData = this.learningSystem.learningData;
         
         return `
 ╔════════════════════════════════════════════════════════════╗
@@ -571,6 +641,7 @@ Example:
 ║  Components:                                               ║
 ║  • Terminal: ${this.output ? '✅ Running' : '❌ Error'}                                  ║
 ║  • AI Bridge: ${this.ai ? '✅ Active' : '❌ Inactive'}                                 ║
+║  • Learning System: ${this.learningSystem ? '✅ Active' : '❌ Inactive'}                           ║
 ║  • Termux Emulator: ${this.termux ? '✅ Ready' : '❌ Not loaded'}                          ║
 ║  • Container System: ${this.containers ? '✅ Ready' : '❌ Not loaded'}                         ║
 ║  • Error Handler: ${window.errorHandler ? '✅ Active' : '❌ Inactive'}                           ║
@@ -578,6 +649,11 @@ Example:
 ║  AI Configuration:                                         ║
 ║  • API Key: ${apiKey ? '✅ Configured' : '⚪ Not set (Hybrid mode)'}                            ║
 ║  • Mode: ${apiKey ? 'Enhanced' : 'Hybrid Intelligence'}                                  ║
+║                                                            ║
+║  Learning System:                                          ║
+║  • Successful Sequences: ${learningData.successfulSequences.length}                          ║
+║  • Corrections Made: ${this.learningSystem.corrections.length}                                ║
+║  • Session Goal: ${this.learningSystem.sessionGoal ? '🎯 Detected' : '⚪ None'}                            ║
 ║                                                            ║
 ║  Error Log:                                                ║
 ║  • Total Errors: ${report?.totalErrors || 0}                                      ║
