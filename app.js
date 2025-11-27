@@ -308,8 +308,10 @@ class Terminal {
         this.input = document.getElementById('terminal-input');
         this.history = [];
         this.chatMode = false;
+        this.termuxMode = false;
         this.conversationHistory = [];
         this.ai = new UnifiedAIBridge();
+        this.termux = new TermuxEmulator();
         this.init();
     }
 
@@ -325,9 +327,11 @@ class Terminal {
         this.writeLine('╚════════════════════════════════════════════════════════════╝');
         this.writeLine('');
         this.writeLine('🚀 Powered by Unified AI Bridge - The Soul of Intelligence', '#00ffff');
+        this.writeLine('💻 Full Termux Emulator with Virtual File System', '#00ffff');
         this.writeLine('');
-        this.writeLine('Type "chat" to talk with the ultimate Termux expert');
-        this.writeLine('Type "help" for available commands');
+        this.writeLine('Type "termux" to enter Termux mode (ls, cd, mkdir, etc.)', '#ffff00');
+        this.writeLine('Type "chat" to talk with the ultimate Termux expert', '#ffff00');
+        this.writeLine('Type "help" for available commands', '#ffff00');
     }
 
     writeLine(text, color = '#00ff00') {
@@ -348,7 +352,8 @@ class Terminal {
     async executeCommand(cmd) {
         if (!cmd.trim()) return;
 
-        this.writeLine(`$ ${cmd}`, '#ffffff');
+        const prompt = this.termuxMode ? `${this.termux.environment.USER}@kiro:${this.termux.currentPath}$ ` : '$ ';
+        this.writeLine(`${prompt}${cmd}`, '#ffffff');
         this.history.push(cmd);
 
         // Chat mode handling
@@ -359,6 +364,26 @@ class Terminal {
                 return;
             }
             await this.chatWithAI(cmd);
+            return;
+        }
+
+        // Termux mode handling
+        if (this.termuxMode) {
+            if (cmd.toLowerCase() === 'exit' || cmd.toLowerCase() === 'quit') {
+                this.termuxMode = false;
+                this.writeLine('Exiting Termux mode...', '#ffff00');
+                return;
+            }
+            const parts = cmd.split(' ');
+            const command = parts[0];
+            const args = parts.slice(1);
+            const result = this.termux.executeCommand(command, args);
+            
+            if (result === 'CLEAR') {
+                this.output.innerHTML = '';
+                return;
+            }
+            if (result) this.writeLine(result);
             return;
         }
 
@@ -374,8 +399,8 @@ class Terminal {
             'system': () => this.getSystemInfo(),
             'echo': () => args.join(' '),
             'chat': () => this.enterChatMode(),
+            'termux': () => this.enterTermuxMode(),
             'setup': () => this.setupAI(),
-            'termux': () => this.termuxHelp(args.join(' ')),
             'history': () => this.history.join('\n'),
             'whoami': () => 'You are talking to KIRO - Your AI Terminal Assistant',
             'about': () => this.aboutKiro(),
@@ -396,8 +421,8 @@ class Terminal {
 ╠════════════════════════════════════════════════════════════╣
 ║  help      - Show this help menu                          ║
 ║  chat      - Enter AI chat mode (talk with KIRO)          ║
+║  termux    - Enter Termux emulation mode                  ║
 ║  setup     - Configure AI API settings                    ║
-║  termux    - Get help with Termux commands                ║
 ║  clear     - Clear terminal screen                        ║
 ║  date      - Show current date/time                       ║
 ║  system    - Display system information                   ║
@@ -406,8 +431,36 @@ class Terminal {
 ║  about     - Learn about KIRO                             ║
 ║  config    - Show current configuration                   ║
 ║  echo      - Echo text back                               ║
+║                                                            ║
+║  TERMUX MODE: Full Linux command emulation                ║
+║  ls, cd, pwd, mkdir, cat, rm, cp, mv, touch, grep        ║
+║  pkg, apt, git, ssh, curl, wget, ping, netstat           ║
+║  python, node, vim, nano, and 50+ more commands!         ║
 ╚════════════════════════════════════════════════════════════╝`;
         return help;
+    }
+
+    enterTermuxMode() {
+        this.termuxMode = true;
+        this.writeLine('', '#00ff00');
+        this.writeLine('╔════════════════════════════════════════════════════════════╗', '#00ffff');
+        this.writeLine('║           ENTERING TERMUX EMULATION MODE                  ║', '#00ffff');
+        this.writeLine('╚════════════════════════════════════════════════════════════╝', '#00ffff');
+        this.writeLine('', '#00ff00');
+        this.writeLine('💻 Full Linux Terminal Emulation Active', '#00ff00');
+        this.writeLine('📁 Virtual File System Loaded', '#00ff00');
+        this.writeLine('🔧 50+ Commands Available', '#00ff00');
+        this.writeLine('', '#00ff00');
+        this.writeLine('Available commands:', '#ffff00');
+        this.writeLine('  File: ls, cd, pwd, mkdir, touch, cat, rm, cp, mv, find', '#ffffff');
+        this.writeLine('  Network: ping, curl, wget, netstat, ifconfig, ip, telnet', '#ffffff');
+        this.writeLine('  Package: pkg, apt (install, update, search, etc.)', '#ffffff');
+        this.writeLine('  Dev: python, node, git, vim, nano, gcc', '#ffffff');
+        this.writeLine('  System: ps, top, free, df, uname, whoami, env', '#ffffff');
+        this.writeLine('', '#00ff00');
+        this.writeLine('Type "exit" to return to KIRO mode', '#808080');
+        this.writeLine('', '#00ff00');
+        return '';
     }
 
     getSystemInfo() {
@@ -519,9 +572,7 @@ Cores: ${navigator.hardwareConcurrency || 'N/A'}`;
 ╚════════════════════════════════════════════════════════════╝`;
     }
 
-    termuxHelp(query) {
-        return this.ai.hybridIntelligence(query || 'termux help', query || 'termux help');
-    }
+
 
     async chatWithAI(message) {
         this.conversationHistory.push({ role: 'user', content: message });
