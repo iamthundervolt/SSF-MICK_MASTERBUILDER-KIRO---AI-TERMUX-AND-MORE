@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": false,
+            "**/__pycache__": true,
+            "**/*.pyc": true
+        },
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-vscode.powershell",
+            "dbaeumer.vscode-eslint"
+        ]
+    }
+}
