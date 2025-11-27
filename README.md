@@ -7,15 +7,26 @@ A high-end, interactive, lightweight HTML-based system optimized for iPad/iPhone
 ### 1. Main - System Overview
 Live metrics dashboard showing CPU, memory, tasks, and network status
 
-### 2. Live Terminal - UNIFIED AI AGENT
-Revolutionary AI chat agent with "The Soul" - Unified AI Bridge
+### 2. Live Terminal - UNIFIED AI AGENT + FULL TERMUX EMULATOR
+Revolutionary dual-mode terminal system:
+
+**AI Chat Mode:**
 - **World's Greatest Termux Expert** with deep knowledge base
 - 20+ Termux packages (Python, Node.js, Git, SSH, Nginx, databases, etc.)
 - 10+ Termux APIs (battery, camera, location, notifications, etc.)
 - Hybrid Intelligence: Works brilliantly with OR without API keys
 - Multi-source AI: Automatically tries Groq, HuggingFace, OpenAI
 - Context-aware responses enriched with Termux expertise
-- Commands: help, chat, termux, about, config, system
+
+**Termux Emulation Mode:**
+- **50+ Linux commands** fully functional
+- Virtual file system with persistent state
+- File operations: ls, cd, pwd, mkdir, touch, cat, rm, cp, mv
+- Network tools: ping, curl, wget, netstat, ifconfig, ssh, telnet
+- Package management: pkg/apt (install, update, search, etc.)
+- Development: python, node, git, vim, nano
+- System commands: ps, top, free, df, uname, env
+- Type `termux` to enter, `exit` to return
 
 ### 3. Blockchain Scanner
 Real-time blockchain scanning with start/stop controls
